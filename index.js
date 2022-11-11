@@ -1,9 +1,10 @@
-const Discord = require("discord.js");
-const fetch = require("node-fetch");
-const fs = require("fs");
-require("dotenv").config();
+import * as Discord from "discord.js";
+import fetch from "node-fetch";
+import * as fs from "fs";
+import * as dotenv from "dotenv";
+dotenv.config();
 
-this.client = new Discord.Client({
+const client = new Discord.Client({
     intents:
         [
             Discord.GatewayIntentBits.DirectMessages,
@@ -14,12 +15,12 @@ this.client = new Discord.Client({
     ]
 });
 
-this.client.on("ready", () => {
-    console.info(`Logged in Discord as ${this.client.user.tag}`);
+client.on("ready", () => {
+    console.info(`Logged in Discord as ${client.user.tag}`);
 });
 
-this.client.on("messageCreate", async message => {
-    if (message.author.id == this.client.user.id)
+client.on("messageCreate", async message => {
+    if (message.author.id == client.user.id)
         return;
     if (message.channel.type != Discord.ChannelType.DM)
         return;
@@ -28,7 +29,7 @@ this.client.on("messageCreate", async message => {
         message.channel.send(response);
 });
 
-this.client.login(process.env.DISCORD_TOKEN);
+client.login(process.env.DISCORD_TOKEN);
 
 /** @type {{string: {id: string, last: number}}} */
 const conversations = {}
@@ -61,25 +62,4 @@ function getResponse(message, userId, newConversation = undefined) {
                 resolve(res.message);
             });
     });
-}
-
-/**
- * Save object to json file
- * @param {string} filename
- * @param {any} object
- */
-function saveToFile(filename, object) {
-    fs.writeFileSync(filename, JSON.stringify(object));
-}
-
-/**
- * Load object from json file
- * @param {string} filename
- * @param {any} defolt if not found
- * @returns {any}
- * @see {@link saveToFile}
- */
-function loadFromFile(filename, defolt) {
-    if (!fs.existsSync(filename)) return defolt;
-    return JSON.parse(fs.readFileSync(filename));
 }
