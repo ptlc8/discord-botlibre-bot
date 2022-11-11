@@ -1,6 +1,5 @@
 import * as Discord from "discord.js";
 import fetch from "node-fetch";
-import * as fs from "fs";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -20,11 +19,12 @@ client.on("ready", () => {
 });
 
 client.on("messageCreate", async message => {
+    console.log(message.author.username + " : " + toDisplayMessageContent(message.content, client));
     if (message.author.id == client.user.id)
         return;
     if (message.channel.type != Discord.ChannelType.DM)
         return;
-    var response = await getResponse(message.content, message.author.id);
+    var response = await getResponse(toDisplayMessageContent(message.content, client), message.author.id);
     if (response)
         message.channel.send(response);
 });
@@ -61,5 +61,27 @@ function getResponse(message, userId, newConversation = undefined) {
                 conversations[userId].id = res.conversation;
                 resolve(res.message);
             });
+    });
+}
+
+/**
+ * Transform raw message content into displayable message content
+ * @param {string} message 
+ * @param {Discord.Client} client 
+ * @param {Discord.Guild?} guild
+ * @returns {string}
+ */
+function toDisplayMessageContent(message, client, guild = null) {
+    return message.replace(/<@(!|)([0-9]+)>/, (match, _, id) => {
+        var user = client.users.cache.get(id);
+        return user ? user.username : "quelqu'un";
+    }).replace(/<#([0-9]+)>/, (match, id) => {
+        var channel = client.channels.cache.get(id);
+        return channel?.name ? "#" + channel.name : "ce salon";
+    }).replace(/<@&([0-9]+)>/, (match, id) => {
+        var role = guild?.roles?.cache?.get(id);
+        return role ? role.name : "ce rôle";
+    }).replace(/<(:[a-zA-Z_]+:)([0-9]+)>/, (match, emoji, id) => {
+        return emoji;
     });
 }
